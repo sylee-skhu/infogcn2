@@ -413,8 +413,8 @@ def get_raw_denoised_data():
         frames_cnt.append(num_frames)
 
         if (idx + 1) % 1000 == 0:
-            print('Processed: %.2f%% (%d / %d), ' % \
-                  (100.0 * (idx + 1) / num_skes, idx + 1, num_skes) + \
+            print('Processed: %.2f%% (%d / %d), ' %
+                  (100.0 * (idx + 1) / num_skes, idx + 1, num_skes) +
                   'Missing count: %d' % missing_count)
 
     raw_skes_joints_pkl = osp.join(save_path, 'raw_denoised_joints.pkl')
@@ -425,12 +425,13 @@ def get_raw_denoised_data():
     with open(raw_skes_colors_pkl, 'wb') as f:
         pickle.dump(raw_denoised_colors, f, pickle.HIGHEST_PROTOCOL)
 
-    frames_cnt = np.array(frames_cnt, dtype=np.int)
+    frames_cnt = np.array(frames_cnt, dtype=np.int32)
     np.savetxt(osp.join(save_path, 'frames_cnt.txt'), frames_cnt, fmt='%d')
 
     print('Saved raw denoised positions of {} frames into {}'.format(np.sum(frames_cnt),
                                                                      raw_skes_joints_pkl))
     print('Found %d files that have missing data' % missing_count)
+
 
 if __name__ == '__main__':
     get_raw_denoised_data()

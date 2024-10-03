@@ -1,15 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+
+from sklearn.model_selection import train_test_split
+import h5py
+import logging
+import pickle
+import numpy as np
+import os.path as osp
+import os
 import sys
 sys.path.append(['../..'])
-import os
-import os.path as osp
-import numpy as np
-import pickle
-import logging
-import h5py
-from sklearn.model_selection import train_test_split
-from utils import create_aligned_dataset
 
 root_path = './'
 stat_path = osp.join(root_path, 'statistics')
@@ -43,6 +43,7 @@ def remove_nan_frames(ske_name, ske_joints, nan_logger):
             nan_logger.info('{}\t{:^5}\t{}'.format(ske_name, f + 1, nan_indices))
 
     return ske_joints[valid_frames]
+
 
 def seq_translation(skes_joints):
     for idx, ske_joints in enumerate(skes_joints):
@@ -96,10 +97,10 @@ def frame_translation(skes_joints, skes_name, frames_cnt):
             origin = ske_joints[f, 3:6]  # new origin: middle of the spine (joint-2)
             if (ske_joints[f, 75:] == 0).all():
                 ske_joints[f, :75] = (ske_joints[f, :75] - np.tile(origin, 25)) / \
-                                      dist[f] + np.tile(origin, 25)
+                    dist[f] + np.tile(origin, 25)
             else:
                 ske_joints[f] = (ske_joints[f] - np.tile(origin, 50)) / \
-                                 dist[f] + np.tile(origin, 50)
+                    dist[f] + np.tile(origin, 50)
 
         ske_name = skes_name[idx]
         ske_joints = remove_nan_frames(ske_name, ske_joints, nan_logger)
@@ -205,33 +206,33 @@ def get_indices(performer, camera, evaluation='CS'):
         # Get indices of test data
         for idx in test_ids:
             temp = np.where(performer == idx)[0]  # 0-based index
-            test_indices = np.hstack((test_indices, temp)).astype(np.int)
+            test_indices = np.hstack((test_indices, temp)).astype(np.int32)
 
         # Get indices of training data
         for train_id in train_ids:
             temp = np.where(performer == train_id)[0]  # 0-based index
-            train_indices = np.hstack((train_indices, temp)).astype(np.int)
+            train_indices = np.hstack((train_indices, temp)).astype(np.int32)
     else:  # Cross View (Camera IDs)
         train_ids = [2, 3]
         test_ids = 1
         # Get indices of test data
         temp = np.where(camera == test_ids)[0]  # 0-based index
-        test_indices = np.hstack((test_indices, temp)).astype(np.int)
+        test_indices = np.hstack((test_indices, temp)).astype(np.int32)
 
         # Get indices of training data
         for train_id in train_ids:
             temp = np.where(camera == train_id)[0]  # 0-based index
-            train_indices = np.hstack((train_indices, temp)).astype(np.int)
+            train_indices = np.hstack((train_indices, temp)).astype(np.int32)
 
     return train_indices, test_indices
 
 
 if __name__ == '__main__':
-    camera = np.loadtxt(camera_file, dtype=np.int)  # camera id: 1, 2, 3
-    performer = np.loadtxt(performer_file, dtype=np.int)  # subject id: 1~40
-    label = np.loadtxt(label_file, dtype=np.int) - 1  # action label: 0~59
+    camera = np.loadtxt(camera_file, dtype=np.int32)  # camera id: 1, 2, 3
+    performer = np.loadtxt(performer_file, dtype=np.int32)  # subject id: 1~40
+    label = np.loadtxt(label_file, dtype=np.int32) - 1  # action label: 0~59
 
-    frames_cnt = np.loadtxt(frames_file, dtype=np.int)  # frames_cnt
+    frames_cnt = np.loadtxt(frames_file, dtype=np.int32)  # frames_cnt
     skes_name = np.loadtxt(skes_name_file, dtype=np.string_)
 
     with open(raw_skes_joints_pkl, 'rb') as fr:
@@ -244,5 +245,3 @@ if __name__ == '__main__':
     evaluations = ['CS', 'CV']
     for evaluation in evaluations:
         split_dataset(skes_joints, label, performer, camera, evaluation, save_path)
-
-    create_aligned_dataset(file_list=['NTU60_CS.npz', 'NTU60_CV.npz'])
